@@ -20,29 +20,37 @@ pipeline {
          SONARSCANNER = 'sonarscanner'
     }
 
-    stages {
-        stage('Build') {
-            steps {
+    stages 
+    {
+        stage('Build')
+         {
+            steps 
+            {
                sh 'mvn clean install -U -DskipTests -Dmaven.repo.local=~/.m2/repository'
-               }
-               post {
-                success {
+            }
+               post
+                {
+                success
+                 {
                     echo 'Now Archiving...'
                     archiveArtifacts artifacts: '**/target/*.war'
+                 }
                 }
-            }
-           }
-           stage('UNIT TEST'){
+        }
+           stage('UNIT TEST')
+           {
             steps {
                 sh 'mvn clean install -U -DskipTests -Dmaven.repo.local=~/.m2/repository test'
             }
-        }  
-        stage ('Checkstyle Analysis'){
+           }  
+        stage ('Checkstyle Analysis')
+        {
             steps {
                 sh 'mvn clean install -U -DskipTests -Dmaven.repo.local=~/.m2/repository checkstyle:checkstyle'
             }
         } 
-        stage('CODE ANALYSIS with SONARQUBE') {
+        stage('CODE ANALYSIS with SONARQUBE')
+         {
           
 		  environment {
              scannerHome = tool "${SONARSCANNER}"
@@ -59,15 +67,17 @@ pipeline {
                    -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
             }
           }
-    }
-        stage ('Quality Gate') {
+        }
+        stage ('Quality Gate')
+         {
             steps {
                 timeout(time: 1, unit: 'HOURS') {
                 waitForQualityGate abortPipeline: true 
             }
             }
         } 
-        stage ('uploadArtifact') {
+        stage ('uploadArtifact')
+         {
             steps {
                 nexusArtifactUploader(
                 nexusVersion: 'nexus3',
@@ -87,14 +97,15 @@ pipeline {
             }
         }
 
-      }
+    }
 
-       post{
+       post
+       {
 	  always {
 	 	    echo 'slack Notifications.'
 		    slackSend channel: '#cicd',
 			color:COLOR_MAP[currentBuild.currentResult],
 			message: "*${currentBuild.currentResult}:*Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} \n More info at : ${env.BUILD_URL}"
            }
-          }    
+        }    
 }
